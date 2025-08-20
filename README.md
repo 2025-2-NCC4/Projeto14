@@ -1,4 +1,3 @@
-<SKIPPED_HTML_EDIT_MODE></SKIPPED_HTML_EDIT_MODE>
 # 📊 PicMoney Analytics Platform
 
 **Plataforma de análise de dados para gestão estratégica de cupons fiscais**
