@@ -1,15 +1,34 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import plotly.express as px
+import sys
+import os
 
-st.title("👨‍💼 Painel do CEO")
+# Permite importar o módulo charts/ceo_charts.py
+sys.path.append(os.path.abspath("charts"))
+import ceo_charts
 
-np.random.seed(42)
-df = pd.DataFrame({
-    "Departamento": ["Vendas", "Marketing", "RH", "TI", "Financeiro"],
-    "Lucro": [15000, 12000, 8000, 10000, 13000]
-})
+st.set_page_config(page_title="Visão Geral - CEO", layout="wide")
 
-fig = px.bar(df, x="Departamento", y="Lucro", color="Lucro", title="Lucro por Departamento")
-st.plotly_chart(fig, use_container_width=True)
+df = pd.read_csv("data/Analise-CEO.csv", sep=";")
+
+st.title("Visão Geral - CEO")
+
+tabs = st.tabs(["Usuários", "Gênero", "Modelo de Celular", "Métrica 4", "Métrica 5"])
+
+with tabs[0]:
+    st.subheader("Distribuição por Idade dos Usuários")
+    st.plotly_chart(ceo_charts.grafico_usuarios_por_idade(df), use_container_width=True)
+
+with tabs[1]:
+    st.subheader("Distribuição por Sexo")
+    st.plotly_chart(ceo_charts.grafico_usuarios_por_genero(df), use_container_width=True)
+
+with tabs[2]:
+    st.subheader("Modelos de Celular mais Utilizados")
+    st.plotly_chart(ceo_charts.grafico_usuarios_por_modelo(df), use_container_width=True)
+
+with tabs[3]:
+    st.write("Métrica 4 – aguardando dados futuros")
+
+with tabs[4]:
+    st.write("Métrica 5 – aguardando dados futuros")
