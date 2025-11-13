@@ -14,6 +14,8 @@ st.set_page_config(page_title="Dashboard - CEO", layout="wide")
 @st.cache_data
 def load_data():
     df = pd.read_csv("data/analise-ceo.csv", sep=";")
+    df_teste_em_massa = pd.read_csv("data/teste_em_massa-limpo.csv", sep=";")
+
 
     # === Correção das colunas de latitude e longitude ===
     def limpar_coord(valor):
@@ -29,9 +31,9 @@ def load_data():
         df["latitude"] = df["latitude"].apply(limpar_coord)
         df["longitude"] = df["longitude"].apply(limpar_coord)
 
-    return df
+    return df, df_teste_em_massa
 
-df = load_data()
+df, df_teste_em_massa = load_data()
 
 # Título principal
 st.title("📊 Dashboard Executivo - CEO")
@@ -75,4 +77,4 @@ with tabs[3]:
 # === ABA 5: Campanhas e Comportamento ===
 with tabs[4]:
     st.subheader("🏷️ Campanhas e Comportamento")
-    st.plotly_chart(ceo_charts.grafico_categorias_frequentes(df), use_container_width=True)
+    st.plotly_chart(ceo_charts.grafico_categorias_frequentes(df_teste_em_massa), use_container_width=True)
