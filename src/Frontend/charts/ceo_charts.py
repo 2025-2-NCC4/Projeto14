@@ -1,6 +1,7 @@
 import plotly.express as px
-
-# 1 Distribuição por idade
+import pandas as pd
+#=========================PRIMEIRA ABA CEO=========================#
+# Distribuição por idade
 def grafico_usuarios_por_idade(df):
     fig = px.histogram(
         df,
@@ -30,7 +31,7 @@ def grafico_usuarios_por_idade(df):
     return fig
 
 
-# 2 Distribuição por gênero
+# Distribuição por gênero
 def grafico_usuarios_por_genero(df):
     fig = px.pie(
         df,
@@ -45,8 +46,44 @@ def grafico_usuarios_por_genero(df):
 
     return fig
 
+# Distribuição por horário
+def grafico_distribuicao_por_horario(df):
+    # Tenta converter para datetime caso venha como string
+    try:
+        df["horario"] = pd.to_datetime(df["horario"], format="%H:%M", errors="coerce").dt.hour
+    except:
+        pass
 
-# 3 Modelos de celular
+    fig = px.histogram(
+        df,
+        x="horario",
+        nbins=24,
+        title="Distribuição de Horários de Uso",
+        color_discrete_sequence=["#44A427"]
+    )
+
+    fig.update_traces(
+        marker_line_color="#1E1E1E",
+        marker_line_width=1.5,
+        opacity=0.8
+    )
+
+    fig.update_layout(
+        template="plotly_dark",
+        font=dict(color="white", size=14),
+        title=dict(x=0.5, font=dict(size=22)),
+        bargap=0.25,
+        xaxis_title="Horário do Dia",
+        yaxis_title="Quantidade de Usuários",
+        xaxis=dict(dtick=1, showgrid=False),
+        yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.1)")
+    )
+
+    return fig
+
+#=========================SEGUNDA ABA CEO=========================#
+
+# Modelos de celular
 def grafico_usuarios_por_modelo(df):
     dados = df["modelo_celular"].value_counts().reset_index()
     dados.columns = ["modelo_celular", "quantidade"]
@@ -73,7 +110,7 @@ def grafico_usuarios_por_modelo(df):
     return fig
 
 
-# 4 Tipos de celular
+# Tipos de celular
 def grafico_tipo_celular(df):
     if "tipo_celular" in df.columns:
         fig = px.pie(
@@ -95,18 +132,93 @@ def grafico_tipo_celular(df):
 
     return fig
 
+# Usuários com App PicMoney
+def grafico_usuarios_com_app(df):
+    if "possui_app_picmoney" not in df.columns:
+        return px.bar(title="Coluna 'possui_app_picmoney' não encontrada.")
 
-# 5 Localização (simplificado)
-def grafico_distribuicao_local(df):
-    if {"latitude", "longitude"}.issubset(df.columns):
-        fig = px.scatter_mapbox(
+    dados = df["possui_app_picmoney"].value_counts().reset_index()
+    dados.columns = ["Possui App", "Quantidade"]
+
+    fig = px.pie(
+        dados,
+        names="Possui App",
+        values="Quantidade",
+        title="Usuários que Possuem o App PicMoney",
+        color_discrete_sequence=["#44A427", "#1E5128"]
+    )
+
+    fig.update_layout(
+        template="plotly_dark",
+        title=dict(x=0.5)
+    )
+
+    return fig
+
+# Tipo de celular por idade
+
+def grafico_tipo_celular_por_idade(df):
+    if {"idade", "tipo_celular"}.issubset(df.columns):
+        fig = px.histogram(
             df,
+            x="idade",
+            color="tipo_celular",
+            barmode="stack",
+            title="Distribuição do Tipo de Celular por Idade",
+            color_discrete_sequence=px.colors.qualitative.Set2
+        )
+
+        fig.update_layout(
+            template="plotly_dark",
+            xaxis_title="Idade",
+            yaxis_title="Quantidade de Usuários",
+            bargap=0.1
+        )
+    else:
+        fig = px.bar(title="Colunas 'idade' ou 'tipo_celular' não encontradas.")
+
+    return fig
+
+# Modelo de celular vs engajamento (valor capturado)
+def grafico_modelo_vs_engajamento(df):
+    if {"modelo_celular", "ultimo_valor_capturado"}.issubset(df.columns):
+        fig = px.box(
+            df,
+            x="modelo_celular",
+            y="ultimo_valor_capturado",
+            title="Engajamento por Modelo de Celular (Valor Capturado)",
+            color="modelo_celular",
+            color_discrete_sequence=px.colors.qualitative.Vivid
+        )
+
+        fig.update_layout(
+            template="plotly_dark",
+            xaxis_title="Modelo de Celular",
+            yaxis_title="Último Valor Capturado (R$)",
+            showlegend=False,
+            xaxis=dict(tickangle=-45)
+        )
+    else:
+        fig = px.bar(title="Dados insuficientes para gerar a correlação.")
+
+    return fig
+
+
+
+#=========================TERCEIRA ABA CEO=========================#
+
+# Localização (simplificado)
+def grafico_distribuicao_local(df_mapa):
+    if {"latitude", "longitude"}.issubset(df_mapa.columns):
+        fig = px.scatter_mapbox(
+            df_mapa,
             lat="latitude",
             lon="longitude",
+            color="local",
             hover_name="local",
-            title="Distribuição Geográfica dos Usuários",
             zoom=14.4,
-            color_discrete_sequence=["#FABC45"]
+            title="Distribuição Geográfica dos Usuários e Capturas",
+            color_discrete_sequence=["#23EB05", "#0000FF"]
         )
 
         fig.update_layout(
@@ -116,14 +228,127 @@ def grafico_distribuicao_local(df):
             height=750,
         )
     else:
-        fig = px.bar(
-            title="Mapa não disponível – faltam coordenadas na base."
+        fig = px.bar(title="Nenhuma coordenada encontrada.")
+
+    return fig
+
+# Locais mais frequentes
+def grafico_locais_frequentes(df):
+    if "local" not in df.columns:
+        return px.bar(title="A coluna 'local' não foi encontrada.")
+
+    locais = df["local"].value_counts().reset_index()
+    locais.columns = ["Local", "Frequência"]
+
+    fig = px.bar(
+        locais,
+        x="Local",
+        y="Frequência",
+        title="Locais Mais Frequentes",
+        text="Frequência",
+        color="Local",
+        color_discrete_sequence=px.colors.qualitative.Set2
+    )
+
+    fig.update_traces(
+        textposition="outside",
+        marker_line_width=1.5,
+        marker_line_color="#1E1E1E",
+        opacity=0.85
+    )
+
+    fig.update_layout(
+        template="plotly_dark",
+        xaxis_title="Local",
+        yaxis_title="Frequência",
+        showlegend=False,
+        xaxis=dict(tickangle=-45)
+    )
+
+    return fig
+
+# Heatmap de densidade geográfica
+def grafico_heatmap_localizacao(df):
+    if {"latitude", "longitude"}.issubset(df.columns):
+        fig = px.density_mapbox(
+            df,
+            lat="latitude",
+            lon="longitude",
+            radius=25,  # tamanho do raio da "mancha" de calor
+            center=dict(lat=df["latitude"].mean(), lon=df["longitude"].mean()),
+            zoom=11,
+            mapbox_style="carto-darkmatter",
+            title="Heatmap de Concentração Geográfica"
         )
+
+        fig.update_layout(
+            template="plotly_dark",
+            height=750
+        )
+        return fig
+    else:
+        return px.bar(title="Colunas de coordenadas não encontradas.")
+
+
+# Horário x Local (Heatmap)
+def grafico_horario_por_local(df):
+    if not {"horario", "local"}.issubset(df.columns):
+        return px.bar(title="Colunas necessárias ('horario', 'local') não encontradas.")
+
+    # Conversão do horário para hora (0–23)
+    df_temp = df.copy()
+    df_temp["horario"] = pd.to_datetime(df_temp["horario"], errors="coerce").dt.hour
+
+    # Agrupar
+    matriz = df_temp.groupby(["local", "horario"]).size().reset_index(name="contagem")
+
+    fig = px.density_heatmap(
+        matriz,
+        x="horario",
+        y="local",
+        z="contagem",
+        color_continuous_scale="Viridis",
+        title="Horários Mais Movimentados por Local"
+    )
+
+    fig.update_layout(
+        template="plotly_dark",
+        xaxis_title="Horário do Dia",
+        yaxis_title="Local"
+    )
 
     return fig
 
 
-# 6 Valor capturado por idade
+# Mapa com clusters
+def grafico_mapa_clusters(df):
+    if not {"latitude", "longitude"}.issubset(df.columns):
+        return px.scatter_mapbox(title="Coordenadas não encontradas.")
+
+    fig = px.scatter_mapbox(
+        df,
+        lat="latitude",
+        lon="longitude",
+        color="local" if "local" in df.columns else None,
+        hover_name="local" if "local" in df.columns else None,
+        zoom=14.4,
+        title="Mapa com Agrupamento de Pontos (Cluster)"
+    )
+
+    fig.update_traces(cluster=dict(enabled=True))
+
+    fig.update_layout(
+        mapbox_style="carto-darkmatter",
+        template="plotly_dark",
+        height=750
+    )
+
+    return fig
+
+
+#=========================QUARTA ABA CEO=========================#
+
+# Valor capturado por idade
 def grafico_valor_capturado_por_idade(df):
     if {"idade", "ultimo_valor_capturado"}.issubset(df.columns):
         fig = px.box(
@@ -153,8 +378,9 @@ def grafico_valor_capturado_por_idade(df):
 
     return fig
 
+#=========================QUINTA ABA CEO=========================#
 
-# 7 Categorias mais frequentes (placeholder)
+# Categorias mais frequentes
 def grafico_categorias_frequentes(df_teste_em_massa):
     if "categoria_frequentada" in df_teste_em_massa.columns:
         # Contar as categorias mais frequentes
